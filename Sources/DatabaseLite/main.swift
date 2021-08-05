@@ -25,6 +25,9 @@ struct DatabaseLite: ParsableCommand {
     
     func run() throws {
         DLLogging.log(.debug(.low), "Hello World")
+        
+        let fm = FileManager.default
+        try? fm.removeItem(atPath: name)
                 
         do {
             

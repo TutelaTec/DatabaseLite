@@ -10,7 +10,17 @@ import SQLite3
 
 class DLDatabase {
     
-    let sqlite: OpaquePointer
+    var sqlite: OpaquePointer? {
+        didSet {
+            if let old = oldValue {
+                sqlite3_close(old)
+            }
+        }
+    }
+    
+    var errorMessage: String {
+        return String(validatingUTF8: sqlite3_errmsg(self.sqlite)) ?? "-- not available --"
+    }
     
     
     init( _ sql: OpaquePointer ) {
@@ -24,6 +34,24 @@ class DLDatabase {
         }
         sqlite = db
     }
+    
+    func close() {
+        sqlite = nil
+    }
+    deinit {
+        close()
+    }
+    
+    func checkResult(_ result: Int32) throws {
+        try checkResult(Int(result))
+    }
+
+    func checkResult(_ result: Int) throws {
+        if result != Int(SQLITE_OK) {
+            throw DLSqliteError(result, self.errorMessage)
+        }
+    }
+
     
     func create<T:Decodable & DLTablable>(tableFor type: T.Type) throws {
         
@@ -39,7 +67,46 @@ class DLDatabase {
 
     }
     
+    func prepare(statement stmt: String) throws -> DLStatement {
+        guard let db = self.sqlite else {
+            throw DLDatabaseError("missing sqlite database")
+        }
+        let count = Int32(stmt.utf8.count)
+        guard count > 0 else {
+            throw DLDatabaseError("statement is empty")
+        }
+        var stmtPtr = OpaquePointer(bitPattern: 0)
+        let res = sqlite3_prepare_v2(db, stmt, count, &stmtPtr, nil)
+        try checkResult(res)
+        return DLStatement(db, stmt: stmtPtr)
+    }
+    
+    func forEachRow(statement: String, doBindings: (DLStatement) throws -> (), handleRow: (DLStatement, Int) throws -> ()) throws {
+        let stmt = try prepare(statement: statement)
+        defer { stmt.finalize() }
+
+        try doBindings(stmt)
+
+        try forEachRowBody(statement: stmt, handleRow: handleRow)
+    }
+
+    func forEachRowBody(statement: DLStatement, handleRow: (DLStatement, Int) throws -> ()) throws {
+        var r = stat.step()
+        guard r == SQLITE_ROW || r == SQLITE_DONE else {
+            try checkResult(r)
+            return
+        }
+        
+        var rowNum = 1
+        while r == SQLITE_ROW {
+            try handleRow(stat, rowNum)
+            rowNum += 1
+            r = stat.step()
+        }
+    }
+
 }
+
 
 
 extension DLColumn {

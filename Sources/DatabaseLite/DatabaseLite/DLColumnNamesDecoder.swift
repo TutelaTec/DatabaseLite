@@ -76,6 +76,8 @@ class DLColumnNamesReader<K: CodingKey>: KeyedDecodingContainerProtocol {
     }
     
     func decodeNil(forKey key: K) throws -> Bool {
+        DLLogging.log(.warning(.high), "Optionals are not currently supported")
+        
         isOptional = true
         return false
     }
