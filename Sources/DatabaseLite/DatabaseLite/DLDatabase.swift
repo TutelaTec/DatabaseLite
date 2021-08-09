@@ -52,21 +52,6 @@ class DLDatabase {
         }
     }
 
-    
-    func create<T:DLTablable>(tableFor type: T.Type) throws {
-        let named = type.tableName
-        let decoder = DLColumnNamesDecoder()
-        var isPrimary = true
-        let columns = try decoder.decode(type).map({ col -> String in
-            let cmd = try col.command(isPrimary: isPrimary)
-            isPrimary = false
-            return cmd
-        })
-        let query = "CREATE TABLE IF NOT EXISTS \(named) ( \(columns.joined(separator: ", ")) )"
-
-        try execute(statement: query)
-    }
-    
     func prepare(statement stmt: String) throws -> DLStatement {
         guard let db = self.sqlite else {
             throw DLDatabaseError("missing sqlite database")
@@ -82,6 +67,50 @@ class DLDatabase {
             throw DLDatabaseError("statement pointer is nil")
         }
         return DLStatement(db, stmt: s)
+    }
+    
+
+    func create<T:DLTablable>(tableFor type: T.Type) throws {
+        let named = type.tableName
+        let decoder = DLColumnNamesDecoder()
+        var isPrimary = true
+        let columns = try decoder.decode(type).map({ col -> String in
+            let cmd = try col.command(isPrimary: isPrimary)
+            isPrimary = false
+            return cmd
+        })
+        guard !columns.isEmpty else { throw DLDatabaseError("Table \(named) is missing columns") }
+        let query = "CREATE TABLE IF NOT EXISTS \(named) ( \(columns.joined(separator: ", ")) )"
+
+        try execute(statement: query)
+    }
+    
+    func select<T:DLTablable>(tableFor type: T.Type, whereRowId rowId:DLTablable.RowId) throws -> T? {
+        guard rowId != .invalid else { throw DLDatabaseError("Invalid RowId") }
+        
+        let named = type.tableName
+        let columnNamesDecoder = DLColumnNamesDecoder()
+        let columns = try columnNamesDecoder.decode(type)
+        guard !columns.isEmpty, let primary = columns.first else { throw DLDatabaseError("Table \(named) is missing columns") }
+        
+        let selected = columns.map { column in
+            column.name
+        }
+        
+        let query = "select \(selected.joined(separator: ", ")) from \(named) where \(primary.name) = ?"
+        
+        print(query)
+        
+        var rows = [T]()
+        let decoder = DLTableDecoder()
+        
+        try forEachRow(statement: query) { statement in
+            try statement.bind(position: 1, rowId)
+        } handleRow: { statement, _ in
+            rows.append(try decoder.decode(type, from:statement))
+        }
+        
+        return rows.first
     }
     
     // insert a record that

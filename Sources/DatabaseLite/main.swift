@@ -43,7 +43,12 @@ struct DatabaseLite: ParsableCommand {
             var exp = Experiment(rowId: 1, timestamp: 2000, download: 300.0, upload: 200.0, status: "Success")
             try db.insert(&exp)
             
-            print( exp.inspect() )
+            let other = try db.select(tableFor: Experiment.self, whereRowId: 1)
+            if let other = other {
+                print( other.inspect() )
+            }
+            //print( other.inspect() )
+
         }
         catch {
             print("failed: \(error)")
