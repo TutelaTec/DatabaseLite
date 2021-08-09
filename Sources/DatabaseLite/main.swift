@@ -3,11 +3,11 @@ import Foundation
 import Spreadsheet
 import SQLite3
 
-struct Experiment: Codable, DLTablable {
-    let rowId: Int 
+struct Experiment: DLTablable {
+    var rowId: RowId = .invalid
     let timestamp: Int
     let download: Double
-    let upload: Double?
+    let upload: Double
     let status: String
     
     enum CodingKeys: String, CodingKey {
@@ -16,6 +16,12 @@ struct Experiment: Codable, DLTablable {
         case download = "T1"
         case upload = "T2"
         case status = "S"
+    }
+    
+    func inspect() -> String {
+        let toStr = StringsEncoder()
+        let str = try? toStr.encode(self)
+        return type(of: self).tableName + " : " + (str ?? "-- error --")
     }
 }
 
@@ -34,6 +40,10 @@ struct DatabaseLite: ParsableCommand {
             let db = try DLDatabase(atPath: name)
             try db.create(tableFor: Experiment.self)
             
+            var exp = Experiment(rowId: 1, timestamp: 2000, download: 300.0, upload: 200.0, status: "Success")
+            try db.insert(&exp)
+            
+            print( exp.inspect() )
         }
         catch {
             print("failed: \(error)")

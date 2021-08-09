@@ -53,8 +53,7 @@ class DLDatabase {
     }
 
     
-    func create<T:Decodable & DLTablable>(tableFor type: T.Type) throws {
-        
+    func create<T:DLTablable>(tableFor type: T.Type) throws {
         let named = type.tableName
         let decoder = DLColumnNamesDecoder()
         var isPrimary = true
@@ -63,8 +62,9 @@ class DLDatabase {
             isPrimary = false
             return cmd
         })
-        print( "CREATE TABLE IF NOT EXISTS \(named) ( \(columns.joined(separator: ", ")) )" )
+        let query = "CREATE TABLE IF NOT EXISTS \(named) ( \(columns.joined(separator: ", ")) )"
 
+        try execute(statement: query)
     }
     
     func prepare(statement stmt: String) throws -> DLStatement {
@@ -78,9 +78,100 @@ class DLDatabase {
         var stmtPtr = OpaquePointer(bitPattern: 0)
         let res = sqlite3_prepare_v2(db, stmt, count, &stmtPtr, nil)
         try checkResult(res)
-        return DLStatement(db, stmt: stmtPtr)
+        guard let s = stmtPtr else {
+            throw DLDatabaseError("statement pointer is nil")
+        }
+        return DLStatement(db, stmt: s)
     }
     
+    // insert a record that
+    @discardableResult 
+    func insert<T:DLTablable>(_ record: inout T) throws -> DLTablable.RowId {
+        let named = type(of: record).tableName
+        DLLogging.log(.debug(), named)
+        
+        let encoder = DLBindingEncoder()
+        var bindings = try encoder.encode(record)
+        // the first binding is the primary key. remove it
+        bindings.removeFirst()
+
+        // let's not have tables with nothing but rowid, okay
+        guard !bindings.isEmpty else {
+            throw DLDatabaseError("Table \(named) has no columns")
+        }
+        
+        let columns = bindings.map { binding in
+            binding.column
+        }
+        let marker = bindings.map { _ in
+            "?"
+        }
+
+        let query = "insert into \(named) (\(columns.joined(separator: ","))) values (\(marker.joined(separator: ",")))"
+
+        
+        try execute(statement: query) { statement in
+            let count = bindings.count
+            for i in 1 ... count {
+                let binding = bindings[i-1]
+                try binding.bind(with: statement, at: i)
+            }
+        }
+        
+        let rowId = lastInsertRowId()
+        record.rowId = rowId
+        return rowId
+    }
+    
+    func lastInsertRowId() -> DLTablable.RowId {
+        return sqlite3_last_insert_rowid(self.sqlite)
+    }
+    
+    func execute(statement: String) throws {
+        try forEachRow(statement: statement, doBindings: { (DLStatement) throws -> () in () }) { _, _ in
+            // nothing to be done
+        }
+    }
+
+    func execute(statement: String, doBindings: (DLStatement) throws -> ()) throws {
+        try forEachRow(statement: statement, doBindings: doBindings) {
+            _, _ in
+            // nothing to be done
+        }
+    }
+
+    func execute(statement: String, count: Int, doBindings: (DLStatement, Int) throws -> ()) throws {
+        let stat = try prepare(statement: statement)
+        defer { stat.finalize() }
+
+        for idx in 1...count {
+            try doBindings(stat, idx)
+            try forEachRowBody(statement: stat) { _, _ in
+                // nothing to be done
+            }
+            let _ = try stat.reset()
+        }
+    }
+
+    
+    func execute(WithTransaction closure: () throws -> ()) throws {
+        try execute(statement: "BEGIN")
+        do {
+            try closure()
+            try execute(statement: "COMMIT")
+        } catch let e {
+            try execute(statement: "ROLLBACK")
+            throw e
+        }
+    }
+    
+    func forEachRow(statement: String, handleRow: (DLStatement, Int) throws -> ()) throws {
+        let stmt = try prepare(statement: statement)
+        defer { stmt.finalize() }
+
+        try forEachRowBody(statement: stmt, handleRow: handleRow)
+    }
+
     func forEachRow(statement: String, doBindings: (DLStatement) throws -> (), handleRow: (DLStatement, Int) throws -> ()) throws {
         let stmt = try prepare(statement: statement)
         defer { stmt.finalize() }
@@ -91,7 +182,7 @@ class DLDatabase {
     }
 
     func forEachRowBody(statement: DLStatement, handleRow: (DLStatement, Int) throws -> ()) throws {
-        var r = stat.step()
+        var r = statement.step()
         guard r == SQLITE_ROW || r == SQLITE_DONE else {
             try checkResult(r)
             return
@@ -99,9 +190,9 @@ class DLDatabase {
         
         var rowNum = 1
         while r == SQLITE_ROW {
-            try handleRow(stat, rowNum)
+            try handleRow(statement, rowNum)
             rowNum += 1
-            r = stat.step()
+            r = statement.step()
         }
     }
 

@@ -9,10 +9,10 @@ import Foundation
 
 /// An object that encodes instances of a data type
 /// as strings following the simple strings file format.
-public class StringsEncoder {
+class StringsEncoder {
     
     /// Returns a strings file-encoded representation of the specified value.
-    public func encode<T: Encodable>(_ value: T) throws -> String {
+    func encode<T: Encodable>(_ value: T) throws -> String {
         let stringsEncoding = StringsEncoding()
         try value.encode(to: stringsEncoding)
         return dotStringsFormat(from: stringsEncoding.data.strings)

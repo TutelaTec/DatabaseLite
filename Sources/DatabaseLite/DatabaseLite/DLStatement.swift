@@ -119,13 +119,16 @@ class DLStatement {
         try bind(position: position, Int32(b ? 1 : 0))
     }
     func bind(position: Int, _ i: UInt) throws {
-        try bind(position: position, Int64(i))
+        try bind(position: position, Int64(bitPattern: UInt64(i)))
+    }
+    func bind(position: Int, _ i: UInt64) throws {
+        try bind(position: position, Int64(bitPattern: i))
     }
     func bind(position: Int, _ i: UInt8) throws {
-        try bind(position: position, Int32(i))
+        try bind(position: position, Int32(bitPattern: UInt32(i)))
     }
     func bind(position: Int, _ i: UInt16) throws {
-        try bind(position: position, Int32(i))
+        try bind(position: position, Int32(bitPattern: UInt32(i)))
     }
 
 
@@ -187,7 +190,7 @@ class DLStatement {
     }
     
     func columnDeclType(position: Int) throws -> String {
-        if let decl = String(validatingUTF8: sqlite3_column_decltype(statement, Int32(position))) else {
+        guard let decl = String(validatingUTF8: sqlite3_column_decltype(statement, Int32(position))) else {
             throw DLDatabaseError(self.errorMessage)
         }
         return decl
@@ -230,7 +233,7 @@ class DLStatement {
     func columnInt8(position: Int) -> Int8 {
         return Int8(columnInt32(position: position))
     }
-    func columnUInt8(position: Int8) -> UInt8 {
+    func columnUInt8(position: Int) -> UInt8 {
         return UInt8(columnInt32(position: position))
     }
     func columnInt16(position: Int) -> Int16 {
