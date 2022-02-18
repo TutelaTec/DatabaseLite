@@ -8,7 +8,7 @@
 import Foundation
 
 
-class DLBindingEncoder {
+public class DLBindingEncoder {
     func encode<T: Encodable>(_ value: T) throws -> DLBindings {
         let encoder = DLBindingEncoding()
         try value.encode(to: encoder)
@@ -16,9 +16,9 @@ class DLBindingEncoder {
     }
 }
 
-class DLBindingEncoding: Encoder {
-    var codingPath: [CodingKey] = []
-    let userInfo: [CodingUserInfoKey : Any] = [:]
+public class DLBindingEncoding: Encoder {
+    public var codingPath: [CodingKey] = []
+    public let userInfo: [CodingUserInfoKey : Any] = [:]
     
     var bindings: DLBindings = []
     
@@ -26,15 +26,15 @@ class DLBindingEncoding: Encoder {
         bindings += [binding]
     }
     
-    func container<Key>(keyedBy type: Key.Type) -> KeyedEncodingContainer<Key> where Key : CodingKey {
+    public func container<Key>(keyedBy type: Key.Type) -> KeyedEncodingContainer<Key> where Key : CodingKey {
         return KeyedEncodingContainer(DLBindingWriter<Key>(self))
     }
     
-    func unkeyedContainer() -> UnkeyedEncodingContainer {
+    public func unkeyedContainer() -> UnkeyedEncodingContainer {
         fatalError("Unimplemented")
     }
     
-    func singleValueContainer() -> SingleValueEncodingContainer {
+    public func singleValueContainer() -> SingleValueEncodingContainer {
         fatalError("Unimplemented")
     }
 }

@@ -9,7 +9,7 @@ import Foundation
 
 /// An object that encodes instances of a data type
 /// as strings following the simple strings file format.
-class StringsEncoder {
+public class StringsEncoder {
     
     /// Returns a strings file-encoded representation of the specified value.
     func encode<T: Encodable>(_ value: T) throws -> String {

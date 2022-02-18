@@ -8,7 +8,7 @@
 import Foundation
 import SQLite3
 
-class DLStatement {
+public class DLStatement {
     typealias sqlite_destructor = @convention(c) (UnsafeMutableRawPointer?) -> Void
 
     let sqlite: OpaquePointer

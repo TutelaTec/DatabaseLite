@@ -8,20 +8,20 @@
 import Foundation
 import SQLite3
 
-class DLTableDecoder {
+public class DLTableDecoder {
     func decode<T:Decodable>(_ type: T.Type, from statement:DLStatement) throws -> T {
         let decoder = try DLTableDecoding(statement)
         return try type.init(from: decoder)
     }
 }
 
-class DLTableDecoding: Decoder {
-    var codingPath: [CodingKey] = []
-    let userInfo: [CodingUserInfoKey : Any] = [:]
-    let statement: DLStatement
+public class DLTableDecoding: Decoder {
+    public var codingPath: [CodingKey] = []
+    public let userInfo: [CodingUserInfoKey : Any] = [:]
+    public let statement: DLStatement
     let map:[String:Int]
     
-    init(_ stmt: DLStatement) throws {
+    public init(_ stmt: DLStatement) throws {
         var columnMap = [String:Int]()
         let count = stmt.columnCount()
         for index in 0 ..< count {
@@ -32,15 +32,15 @@ class DLTableDecoding: Decoder {
         map = columnMap
     }
     
-    func container<Key>(keyedBy type: Key.Type) throws -> KeyedDecodingContainer<Key> where Key : CodingKey {
+    public func container<Key>(keyedBy type: Key.Type) throws -> KeyedDecodingContainer<Key> where Key : CodingKey {
         return KeyedDecodingContainer<Key>(DLTableReader<Key>(self))
     }
     
-    func singleValueContainer() throws -> SingleValueDecodingContainer {
+    public func singleValueContainer() throws -> SingleValueDecodingContainer {
         throw DLDecoderError("Not doing this yet")
     }
     
-    func unkeyedContainer() throws -> UnkeyedDecodingContainer {
+    public func unkeyedContainer() throws -> UnkeyedDecodingContainer {
         throw DLDecoderError("Not doing this yet")
     }
 }

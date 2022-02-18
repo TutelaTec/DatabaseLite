@@ -8,7 +8,7 @@
 import Foundation
 import SQLite3
 
-class DLDatabase {
+public class DLDatabase {
     
     var sqlite: OpaquePointer? {
         didSet {
@@ -23,11 +23,11 @@ class DLDatabase {
     }
     
     
-    init( _ sql: OpaquePointer ) {
+    public init( _ sql: OpaquePointer ) {
         sqlite = sql
     }
     
-    init( atPath path: String ) throws {
+    public init( atPath path: String ) throws {
         var db:OpaquePointer?
         guard SQLITE_OK == sqlite3_open_v2(path, &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_FULLMUTEX, nil), let db = db else {
             throw DLDatabaseError("Unable to create database at \(path)")

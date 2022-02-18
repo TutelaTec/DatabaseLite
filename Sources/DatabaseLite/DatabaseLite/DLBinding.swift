@@ -7,10 +7,10 @@
 
 import Foundation
 
-typealias DLBindings = [DLBinding]
+public typealias DLBindings = [DLBinding]
 
-struct DLBinding : CustomStringConvertible {
-    enum Flavour : CustomStringConvertible {
+public struct DLBinding : CustomStringConvertible {
+    public enum Flavour : CustomStringConvertible {
         case null
         case bool(Bool)
         case signed(Int64)
@@ -18,7 +18,7 @@ struct DLBinding : CustomStringConvertible {
         case real(Double)
         case text(String)
         
-        var description: String {
+        public var description: String {
             switch self {
             case .null:
                 return "null"
@@ -38,67 +38,67 @@ struct DLBinding : CustomStringConvertible {
     let column: String
     let flavour: Flavour
     
-    var description: String {
+    public var description: String {
         return column + ": " + flavour.description
     }
     
-    init(_ col:String) {
+    public init(_ col:String) {
         column = col
         flavour = .null
     }
-    init(_ col: String, _ value:Bool) {
+    public init(_ col: String, _ value:Bool) {
         column = col
         flavour = .bool(value)
     }
-    init(_ col: String, _ value:Int) {
+    public init(_ col: String, _ value:Int) {
         column = col
         flavour = .signed(Int64(value))
     }
-    init(_ col: String, _ value:Int8) {
+    public init(_ col: String, _ value:Int8) {
         column = col
         flavour = .signed(Int64(value))
     }
-    init(_ col: String, _ value:Int16) {
+    public init(_ col: String, _ value:Int16) {
         column = col
         flavour = .signed(Int64(value))
     }
-    init(_ col: String, _ value:Int32) {
+    public init(_ col: String, _ value:Int32) {
         column = col
         flavour = .signed(Int64(value))
     }
-    init(_ col: String, _ value:Int64) {
+    public init(_ col: String, _ value:Int64) {
         column = col
         flavour = .signed(value)
     }
-    init(_ col: String, _ value:UInt) {
+    public init(_ col: String, _ value:UInt) {
         column = col
         flavour = .unsigned(UInt64(value))
     }
-    init(_ col: String, _ value:UInt8) {
+    public init(_ col: String, _ value:UInt8) {
         column = col
         flavour = .unsigned(UInt64(value))
     }
-    init(_ col: String, _ value:UInt16) {
+    public init(_ col: String, _ value:UInt16) {
         column = col
         flavour = .unsigned(UInt64(value))
     }
-    init(_ col: String, _ value:UInt32) {
+    public init(_ col: String, _ value:UInt32) {
         column = col
         flavour = .unsigned(UInt64(value))
     }
-    init(_ col: String, _ value:UInt64) {
+    public init(_ col: String, _ value:UInt64) {
         column = col
         flavour = .unsigned(value)
     }
-    init(_ col: String, _ value:Double) {
+    public init(_ col: String, _ value:Double) {
         column = col
         flavour = .real(value)
     }
-    init(_ col: String, _ value:Float) {
+    public init(_ col: String, _ value:Float) {
         column = col
         flavour = .real(Double(value))
     }
-    init(_ col: String, _ value:String) {
+    public init(_ col: String, _ value:String) {
         column = col
         flavour = .text(value)
     }

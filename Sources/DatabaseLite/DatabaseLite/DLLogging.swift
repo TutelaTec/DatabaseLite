@@ -7,9 +7,9 @@
 
 import Foundation
 
-struct DLLogging {
-    enum Code {
-        enum Level {
+public struct DLLogging {
+    public enum Code {
+        public enum Level {
             case low
             case medium
             case high
@@ -46,7 +46,7 @@ struct DLLogging {
         }
     }
     
-    static func log(_ code:Code, _ msg: String, _ function:String = #function, _ file:String = #file, _ line:Int = #line) {
+    public static func log(_ code:Code, _ msg: String, _ function:String = #function, _ file:String = #file, _ line:Int = #line) {
         NSLog("\(code.abbr) \(code.value) in \(function) at \(NSString(string: file).lastPathComponent):\(line)>\n%@", msg)
     }
 }

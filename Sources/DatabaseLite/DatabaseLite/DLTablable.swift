@@ -7,7 +7,7 @@
 
 import Foundation
 
-protocol DLTablable: Codable {
+public protocol DLTablable: Codable {
     typealias RowId = Int64
     static var tableName: String {get}
     
@@ -18,11 +18,11 @@ protocol DLTablable: Codable {
     func inspect() -> String
 }
 
-extension DLTablable.RowId {
+public extension DLTablable.RowId {
     static let invalid:DLTablable.RowId = 0
 }
 
-extension DLTablable {
+public extension DLTablable {
     static var tableName: String {
         return "\(self)"
     }
