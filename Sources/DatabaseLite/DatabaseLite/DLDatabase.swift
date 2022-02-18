@@ -98,9 +98,7 @@ class DLDatabase {
         }
         
         let query = "select \(selected.joined(separator: ", ")) from \(named) where \(primary.name) = ?"
-        
-        print(query)
-        
+                
         var rows = [T]()
         let decoder = DLTableDecoder()
         
@@ -111,6 +109,31 @@ class DLDatabase {
         }
         
         return rows.first
+    }
+    
+    func select<T:DLTablable>(tableFor type: T.Type) throws -> [T] {
+        let named = type.tableName
+        let columnNamesDecoder = DLColumnNamesDecoder()
+        let columns = try columnNamesDecoder.decode(type)
+        guard !columns.isEmpty, let primary = columns.first else { throw DLDatabaseError("Table \(named) is missing columns") }
+        
+        let selected = columns.map { column in
+            column.name
+        }
+        
+        let query = "select \(selected.joined(separator: ", ")) from \(named)"
+                
+        var rows = [T]()
+        let decoder = DLTableDecoder()
+        
+        
+        try forEachRow(statement: query) { statement in
+            // do nothing
+        } handleRow: { statement, _ in
+            rows.append(try decoder.decode(type, from:statement))
+        }
+        
+        return rows
     }
     
     // insert a record that
@@ -157,12 +180,17 @@ class DLDatabase {
     }
     
     func execute(statement: String) throws {
-        try forEachRow(statement: statement, doBindings: { (DLStatement) throws -> () in () }) { _, _ in
-            // nothing to be done
-        }
+        try forEachRow(statement: statement, doBindings: { _ in
+            // nothing
+        }, handleRow: { _, _ in
+            // nothing
+        })
     }
 
-    func execute(statement: String, doBindings: (DLStatement) throws -> ()) throws {
+    typealias Binder = (DLStatement) throws -> Void
+    typealias RowHandler = (DLStatement, Int) throws -> Void
+    
+    func execute(statement: String, doBindings: Binder) throws {
         try forEachRow(statement: statement, doBindings: doBindings) {
             _, _ in
             // nothing to be done
@@ -194,14 +222,14 @@ class DLDatabase {
         }
     }
     
-    func forEachRow(statement: String, handleRow: (DLStatement, Int) throws -> ()) throws {
+    func forEachRow(statement: String, handleRow: RowHandler) throws {
         let stmt = try prepare(statement: statement)
         defer { stmt.finalize() }
 
         try forEachRowBody(statement: stmt, handleRow: handleRow)
     }
 
-    func forEachRow(statement: String, doBindings: (DLStatement) throws -> (), handleRow: (DLStatement, Int) throws -> ()) throws {
+    func forEachRow(statement: String, doBindings: Binder, handleRow: RowHandler) throws {
         let stmt = try prepare(statement: statement)
         defer { stmt.finalize() }
 
@@ -210,7 +238,7 @@ class DLDatabase {
         try forEachRowBody(statement: stmt, handleRow: handleRow)
     }
 
-    func forEachRowBody(statement: DLStatement, handleRow: (DLStatement, Int) throws -> ()) throws {
+    func forEachRowBody(statement: DLStatement, handleRow: RowHandler) throws {
         var r = statement.step()
         guard r == SQLITE_ROW || r == SQLITE_DONE else {
             try checkResult(r)
