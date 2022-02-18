@@ -11,8 +11,12 @@ import Foundation
 /// as strings following the simple strings file format.
 public class StringsEncoder {
     
+    public init() {
+        
+    }
+    
     /// Returns a strings file-encoded representation of the specified value.
-    func encode<T: Encodable>(_ value: T) throws -> String {
+    public func encode<T: Encodable>(_ value: T) throws -> String {
         let stringsEncoding = StringsEncoding()
         try value.encode(to: stringsEncoding)
         return dotStringsFormat(from: stringsEncoding.data.strings)
