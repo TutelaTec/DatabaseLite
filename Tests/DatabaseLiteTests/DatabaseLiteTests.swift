@@ -22,7 +22,7 @@ struct TestTable: DLTablable {
         return type(of: self).tableName + " : " + (str ?? "-- error --")
     }
 }
-
+ 
 
 final class DatabaseLiteTests: XCTestCase {
     func testExample() throws {
