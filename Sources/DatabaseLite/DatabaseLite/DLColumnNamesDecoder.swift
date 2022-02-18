@@ -23,7 +23,7 @@ public typealias DLColumnNames = [DLColumn]
 
 
 public class DLColumnNamesDecoder {
-    func decode<T:Decodable>(_ type: T.Type) throws -> DLColumnNames {
+    public func decode<T:Decodable>(_ type: T.Type) throws -> DLColumnNames {
         let decoder = DLColumnNamesDecoding()
         let _ = try type.init(from: decoder)
         return decoder.collected
@@ -61,7 +61,7 @@ public class DLColumnNamesReader<K: CodingKey>: KeyedDecodingContainerProtocol {
         parent = p
     }
     
-    func appendKey(_ key:Key, _ type:Any.Type) {
+    public func appendKey(_ key:Key, _ type:Any.Type) {
         let name = key.stringValue
         if !knownKeys.contains(name) {
             parent.collected.append(DLColumn(name: name, isOptional: isOptional, type: type))

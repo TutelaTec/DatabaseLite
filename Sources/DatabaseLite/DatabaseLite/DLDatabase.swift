@@ -35,24 +35,24 @@ public class DLDatabase {
         sqlite = db
     }
     
-    func close() {
+    public func close() {
         sqlite = nil
     }
     deinit {
         close()
     }
     
-    func checkResult(_ result: Int32) throws {
+    public func checkResult(_ result: Int32) throws {
         try checkResult(Int(result))
     }
 
-    func checkResult(_ result: Int) throws {
+    public func checkResult(_ result: Int) throws {
         if result != Int(SQLITE_OK) {
             throw DLSqliteError(result, self.errorMessage)
         }
     }
 
-    func prepare(statement stmt: String) throws -> DLStatement {
+    public func prepare(statement stmt: String) throws -> DLStatement {
         guard let db = self.sqlite else {
             throw DLDatabaseError("missing sqlite database")
         }
@@ -70,7 +70,7 @@ public class DLDatabase {
     }
     
 
-    func create<T:DLTablable>(tableFor type: T.Type) throws {
+    public func create<T:DLTablable>(tableFor type: T.Type) throws {
         let named = type.tableName
         let decoder = DLColumnNamesDecoder()
         var isPrimary = true
@@ -85,7 +85,7 @@ public class DLDatabase {
         try execute(statement: query)
     }
     
-    func select<T:DLTablable>(tableFor type: T.Type, whereRowId rowId:DLTablable.RowId) throws -> T? {
+    public func select<T:DLTablable>(tableFor type: T.Type, whereRowId rowId:DLTablable.RowId) throws -> T? {
         guard rowId != .invalid else { throw DLDatabaseError("Invalid RowId") }
         
         let named = type.tableName
@@ -111,7 +111,7 @@ public class DLDatabase {
         return rows.first
     }
     
-    func select<T:DLTablable>(tableFor type: T.Type) throws -> [T] {
+    public func select<T:DLTablable>(tableFor type: T.Type) throws -> [T] {
         let named = type.tableName
         let columnNamesDecoder = DLColumnNamesDecoder()
         let columns = try columnNamesDecoder.decode(type)
@@ -138,7 +138,7 @@ public class DLDatabase {
     
     // insert a record that
     @discardableResult 
-    func insert<T:DLTablable>(_ record: inout T) throws -> DLTablable.RowId {
+    public func insert<T:DLTablable>(_ record: inout T) throws -> DLTablable.RowId {
         let named = type(of: record).tableName
         DLLogging.log(.debug(), named)
         
@@ -175,11 +175,11 @@ public class DLDatabase {
         return rowId
     }
     
-    func lastInsertRowId() -> DLTablable.RowId {
+    public func lastInsertRowId() -> DLTablable.RowId {
         return sqlite3_last_insert_rowid(self.sqlite)
     }
     
-    func execute(statement: String) throws {
+    public func execute(statement: String) throws {
         try forEachRow(statement: statement, doBindings: { _ in
             // nothing
         }, handleRow: { _, _ in
@@ -187,17 +187,17 @@ public class DLDatabase {
         })
     }
 
-    typealias Binder = (DLStatement) throws -> Void
-    typealias RowHandler = (DLStatement, Int) throws -> Void
+    public typealias Binder = (DLStatement) throws -> Void
+    public typealias RowHandler = (DLStatement, Int) throws -> Void
     
-    func execute(statement: String, doBindings: Binder) throws {
+    public func execute(statement: String, doBindings: Binder) throws {
         try forEachRow(statement: statement, doBindings: doBindings) {
             _, _ in
             // nothing to be done
         }
     }
 
-    func execute(statement: String, count: Int, doBindings: (DLStatement, Int) throws -> ()) throws {
+    public func execute(statement: String, count: Int, doBindings: (DLStatement, Int) throws -> ()) throws {
         let stat = try prepare(statement: statement)
         defer { stat.finalize() }
 
@@ -211,7 +211,7 @@ public class DLDatabase {
     }
 
     
-    func execute(WithTransaction closure: () throws -> ()) throws {
+    public func execute(WithTransaction closure: () throws -> ()) throws {
         try execute(statement: "BEGIN")
         do {
             try closure()
@@ -222,14 +222,14 @@ public class DLDatabase {
         }
     }
     
-    func forEachRow(statement: String, handleRow: RowHandler) throws {
+    public func forEachRow(statement: String, handleRow: RowHandler) throws {
         let stmt = try prepare(statement: statement)
         defer { stmt.finalize() }
 
         try forEachRowBody(statement: stmt, handleRow: handleRow)
     }
 
-    func forEachRow(statement: String, doBindings: Binder, handleRow: RowHandler) throws {
+    public func forEachRow(statement: String, doBindings: Binder, handleRow: RowHandler) throws {
         let stmt = try prepare(statement: statement)
         defer { stmt.finalize() }
 
@@ -238,7 +238,7 @@ public class DLDatabase {
         try forEachRowBody(statement: stmt, handleRow: handleRow)
     }
 
-    func forEachRowBody(statement: DLStatement, handleRow: RowHandler) throws {
+    public func forEachRowBody(statement: DLStatement, handleRow: RowHandler) throws {
         var r = statement.step()
         guard r == SQLITE_ROW || r == SQLITE_DONE else {
             try checkResult(r)
@@ -259,7 +259,7 @@ public class DLDatabase {
 
 extension DLColumn {
 
-    func command(isPrimary:Bool = false) throws -> String {
+    public func command(isPrimary:Bool = false) throws -> String {
         guard !(isOptional && isPrimary) else {
             throw DLDatabaseError("Primary can't be optional")
         }

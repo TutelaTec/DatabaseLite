@@ -16,7 +16,7 @@ struct TestTable: DLTablable {
         case status = "S"
     }
     
-    func inspect() -> String {
+    public func inspect() -> String {
         let toStr = StringsEncoder()
         let str = try? toStr.encode(self)
         return type(of: self).tableName + " : " + (str ?? "-- error --")
@@ -25,7 +25,7 @@ struct TestTable: DLTablable {
   
 
 final class DatabaseLiteTests: XCTestCase {
-    func testExample() throws {
+    public func testExample() throws {
         let name = "DatabaseLiteTests.sqlite"
         DLLogging.log(.debug(.low), "Hello World")
         

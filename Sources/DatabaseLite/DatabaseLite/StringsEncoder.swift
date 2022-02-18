@@ -36,7 +36,7 @@ fileprivate struct StringsEncoding: Encoder {
     fileprivate final class Data {
         private(set) var strings: [String: String] = [:]
         
-        func encode(key codingKey: [CodingKey], value: String) {
+        public func encode(key codingKey: [CodingKey], value: String) {
             let key = codingKey.map { $0.stringValue }.joined(separator: ".")
             strings[key] = value
         }
@@ -52,19 +52,19 @@ fileprivate struct StringsEncoding: Encoder {
     
     let userInfo: [CodingUserInfoKey : Any] = [:]
     
-    func container<Key: CodingKey>(keyedBy type: Key.Type) -> KeyedEncodingContainer<Key> {
+    public func container<Key: CodingKey>(keyedBy type: Key.Type) -> KeyedEncodingContainer<Key> {
         var container = StringsKeyedEncoding<Key>(to: data)
         container.codingPath = codingPath
         return KeyedEncodingContainer(container)
     }
     
-    func unkeyedContainer() -> UnkeyedEncodingContainer {
+    public func unkeyedContainer() -> UnkeyedEncodingContainer {
         var container = StringsUnkeyedEncoding(to: data)
         container.codingPath = codingPath
         return container
    }
     
-    func singleValueContainer() -> SingleValueEncodingContainer {
+    public func singleValueContainer() -> SingleValueEncodingContainer {
         var container = StringsSingleValueEncoding(to: data)
         container.codingPath = codingPath
         return container

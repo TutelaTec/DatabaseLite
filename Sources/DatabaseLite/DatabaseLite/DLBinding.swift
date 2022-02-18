@@ -104,7 +104,7 @@ public struct DLBinding : CustomStringConvertible {
     }
 
     
-    func bind(with stmt:DLStatement, at postion:Int) throws {
+    public func bind(with stmt:DLStatement, at postion:Int) throws {
         switch flavour {
         case .null:
             try stmt.bindNull(position: postion)
