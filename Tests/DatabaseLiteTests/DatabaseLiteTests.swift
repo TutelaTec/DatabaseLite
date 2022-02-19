@@ -2,7 +2,7 @@ import XCTest
 @testable import DatabaseLite
 
 struct TestTable: DLTablable {
-    var rowId: RowId = .zero
+    var rowId: RowId = .invalid
     let timestamp: Int
     let download: Double
     let upload: Double
