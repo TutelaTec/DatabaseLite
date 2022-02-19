@@ -86,7 +86,7 @@ public class DLDatabase {
     }
     
     public func select<T:DLTablable>(tableFor type: T.Type, whereRowId rowId:DLTablable.RowId) throws -> T? {
-        guard rowId != .invalid else { throw DLDatabaseError("Invalid RowId") }
+        guard rowId != .zero else { throw DLDatabaseError("Invalid RowId") }
         
         let named = type.tableName
         let columnNamesDecoder = DLColumnNamesDecoder()
