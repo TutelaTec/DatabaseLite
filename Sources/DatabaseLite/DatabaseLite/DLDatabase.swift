@@ -27,9 +27,12 @@ public class DLDatabase {
         sqlite = sql
     }
     
-    public init( atPath path: String ) throws {
+    public static let ReadWriteCreate = SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE
+    public static let ReadOnly = SQLITE_OPEN_READONLY
+    
+    public init( atPath path: String, flags:Int32 = ReadWriteCreate ) throws {
         var db:OpaquePointer?
-        guard SQLITE_OK == sqlite3_open_v2(path, &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_FULLMUTEX, nil), let db = db else {
+        guard SQLITE_OK == sqlite3_open_v2(path, &db, flags | SQLITE_OPEN_FULLMUTEX, nil), let db = db else {
             throw DLDatabaseError("Unable to create database at \(path)")
         }
         sqlite = db
