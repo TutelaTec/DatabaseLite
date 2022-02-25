@@ -22,6 +22,7 @@ public class DLDatabase {
         return String(validatingUTF8: sqlite3_errmsg(self.sqlite)) ?? "-- not available --"
     }
     
+    let cache = DLCache()
     
     public init( _ sql: OpaquePointer ) {
         sqlite = sql
@@ -114,11 +115,27 @@ public class DLDatabase {
         return rows.first
     }
     
-    public func select<T:DLTablable>(tableFor type: T.Type) throws -> [T] {
+    public func select<T:DLTablable>(rowIdsForTable type: T.Type) throws -> [DLTablable.RowId] {
         let named = type.tableName
         let columnNamesDecoder = DLColumnNamesDecoder()
         let columns = try columnNamesDecoder.decode(type)
         guard !columns.isEmpty, let primary = columns.first else { throw DLDatabaseError("Table \(named) is missing columns") }
+
+        let query = "select \(primary.name) from \(named)"
+        var rows = [DLTablable.RowId]()
+        try forEachRow(statement: query, handleRow: { statement, _ in
+            let row = DLTablable.RowId(statement.columnInt64(position: 0))
+            rows.append(row)
+        })
+        
+        return rows
+    }
+    
+    public func select<T:DLTablable>(tableFor type: T.Type) throws -> [T] {
+        let named = type.tableName
+        let columnNamesDecoder = DLColumnNamesDecoder()
+        let columns = try columnNamesDecoder.decode(type)
+        guard !columns.isEmpty else { throw DLDatabaseError("Table \(named) is missing columns") }
         
         let selected = columns.map { column in
             column.name
@@ -139,11 +156,15 @@ public class DLDatabase {
         return rows
     }
     
+    /// call this when you expect to find the object in the database.
+    func fetch<T:DLTablable>(forTable table: T.Type, whereRowId rowId:DLTablable.RowId) throws -> T {
+        return try cache.fetch(forTable: table, whereRowId: rowId, fromDatabase: self)
+    }
+
     // insert a record that
     @discardableResult 
     public func insert<T:DLTablable>(_ record: inout T) throws -> DLTablable.RowId {
         let named = type(of: record).tableName
-        DLLogging.log(.debug(), named)
         
         let encoder = DLBindingEncoder()
         var bindings = try encoder.encode(record)

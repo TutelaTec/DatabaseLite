@@ -19,7 +19,8 @@ public protocol DLTablable: Codable {
 }
 
 public extension DLTablable.RowId {
-    static let invalid:DLTablable.RowId = 0
+    static let invalid:DLTablable.RowId         = 0
+    static let toBeDefined:DLTablable.RowId     = .invalid
 }
 
 public extension DLTablable {
