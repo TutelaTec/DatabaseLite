@@ -8,6 +8,8 @@
 import Foundation
 import SQLite3
 
+
+
 public class DLDatabase {
     
     var sqlite: OpaquePointer? {
@@ -100,7 +102,7 @@ public class DLDatabase {
         let selected = columns.map { column in
             column.name
         }
-        
+
         let query = "select \(selected.joined(separator: ", ")) from \(named) where \(primary.name) = ?"
                 
         var rows = [T]()
@@ -113,6 +115,40 @@ public class DLDatabase {
         }
         
         return rows.first
+    }
+    
+    
+    public func select<T:DLTablable>(tableFor type: T.Type, where clauses:[DLClause]) throws -> [T] {
+        guard !clauses.isEmpty else {
+            return try select(tableFor: type)
+        }
+        
+        let named = type.tableName
+        let columnNamesDecoder = DLColumnNamesDecoder()
+        let columns = try columnNamesDecoder.decode(type)
+        guard !columns.isEmpty else { throw DLDatabaseError("Table \(named) is missing columns") }
+        
+        let selected = columns.map { column in
+            column.name
+        }
+        
+        let query = "select \(selected.joined(separator: ", ")) from \(named) where " + clauses.reduce("", { partialResult, clause in
+            return partialResult + clause.conjunction.rawValue + " " + clause.column
+        })
+
+        var rows = [T]()
+        let decoder = DLTableDecoder()
+        
+        try forEachRow(statement: query) { statement in
+            for position in 1 ... clauses.count {
+                let clause = clauses[position - 1]
+                try clause.bind(statement, at:position)
+            }
+        } handleRow: { statement, _ in
+            rows.append(try decoder.decode(type, from:statement))
+        }
+        
+        return rows
     }
     
     public enum Order: String {
@@ -170,7 +206,7 @@ public class DLDatabase {
         
         return rows
     }
-    
+        
     /// call this when you expect to find the object in the database.
     public func fetch<T:DLTablable>(forTable table: T.Type, whereRowId rowId:DLTablable.RowId) throws -> T {
         return try cache.fetch(forTable: table, whereRowId: rowId, fromDatabase: self)

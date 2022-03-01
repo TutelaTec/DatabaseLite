@@ -138,4 +138,23 @@ final class DatabaseLiteTests: XCTestCase {
         XCTAssertEqual( lastRowId, howMany)
 
     }
+    
+    public func testSelectionWithClause() throws {
+        let db = try DLDatabase(atPath: databaseName)
+        try db.create(tableFor: TestTable.self)
+        
+        let howMany:Int64 = 100
+        
+        for _ in 1 ... howMany {
+            var exp = TestTable.make()
+            try db.insert(&exp)
+        }
+        
+        let wanted = 40
+        let lower = DLClause.first(.integer(5), "_id >= ?")
+        let upper = DLClause.and(.integer(5+wanted), "_id < ?")
+        
+        let items = try db.select(tableFor: TestTable.self, where: [lower, upper])
+        XCTAssertEqual( items.count, wanted)
+    }
 }

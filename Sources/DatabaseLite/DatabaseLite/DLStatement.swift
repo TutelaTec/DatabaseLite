@@ -100,6 +100,10 @@ public class DLStatement {
         try sanity()
         try checkResult(sqlite3_bind_null(statement, Int32(position)))
     }
+    public func bind(position: Int, _ a: Any) throws {
+        let str = "\(a)"
+        try self.bind(position: position, str)
+    }
 
     
     // extended bindings
