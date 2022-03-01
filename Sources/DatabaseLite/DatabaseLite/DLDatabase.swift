@@ -157,7 +157,7 @@ public class DLDatabase {
     }
     
     /// call this when you expect to find the object in the database.
-    func fetch<T:DLTablable>(forTable table: T.Type, whereRowId rowId:DLTablable.RowId) throws -> T {
+    public func fetch<T:DLTablable>(forTable table: T.Type, whereRowId rowId:DLTablable.RowId) throws -> T {
         return try cache.fetch(forTable: table, whereRowId: rowId, fromDatabase: self)
     }
 
