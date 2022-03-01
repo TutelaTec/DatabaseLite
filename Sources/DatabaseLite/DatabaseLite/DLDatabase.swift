@@ -115,13 +115,24 @@ public class DLDatabase {
         return rows.first
     }
     
-    public func select<T:DLTablable>(rowIdsForTable type: T.Type) throws -> [DLTablable.RowId] {
+    public enum Order: String {
+        case asc
+        case desc
+    }
+    public func select<T:DLTablable>(rowIdsForTable type: T.Type, order:Order = .asc, offset:Int? = nil, limit:Int? = nil) throws -> [DLTablable.RowId] {
         let named = type.tableName
         let columnNamesDecoder = DLColumnNamesDecoder()
         let columns = try columnNamesDecoder.decode(type)
         guard !columns.isEmpty, let primary = columns.first else { throw DLDatabaseError("Table \(named) is missing columns") }
 
-        let query = "select \(primary.name) from \(named)"
+        var query = "select \(primary.name) from \(named) order by \(primary.name) \(order.rawValue) "
+        if let offset = offset {
+            query += "offset \(offset) "
+        }
+        if let limit = limit {
+            query += "limit \(limit) "
+        }
+        
         var rows = [DLTablable.RowId]()
         try forEachRow(statement: query, handleRow: { statement, _ in
             let row = DLTablable.RowId(statement.columnInt64(position: 0))
@@ -129,6 +140,10 @@ public class DLDatabase {
         })
         
         return rows
+    }
+    
+    public func select<T:DLTablable>(lastRowIdForTable type: T.Type) throws -> DLTablable.RowId? {
+        return try select(rowIdsForTable: type, order: .desc, limit: 1).first
     }
     
     public func select<T:DLTablable>(tableFor type: T.Type) throws -> [T] {

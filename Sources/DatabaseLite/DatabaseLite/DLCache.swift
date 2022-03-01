@@ -20,7 +20,7 @@ public class DLCache {
         return nil
     }
     
-    private func save(_ it:DLTablable) throws {
+    private func stash(_ it:DLTablable) throws {
         let key = type(of: it).tableName
         var table: Table = cache[key] ?? Table()
         table[it.rowId] = it
@@ -32,7 +32,7 @@ public class DLCache {
             return it
         }
         if let it = try db.select(tableFor: T.self, whereRowId: rowId) {
-            try self.save(it)
+            try self.stash(it)
             return it
         }
         throw DLDatabaseError("\(rowId) not found for \(table)")
