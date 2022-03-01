@@ -122,4 +122,20 @@ final class DatabaseLiteTests: XCTestCase {
         }
 
     }
+    
+    public func testSelect() throws {
+        let db = try DLDatabase(atPath: databaseName)
+        try db.create(tableFor: TestTable.self)
+        
+        let howMany:Int64 = 100
+        
+        for _ in 1 ... howMany {
+            var exp = TestTable.make()
+            try db.insert(&exp)
+        }
+        
+        let lastRowId = try db.select(lastRowIdForTable: TestTable.self)
+        XCTAssertEqual( lastRowId, howMany)
+
+    }
 }
