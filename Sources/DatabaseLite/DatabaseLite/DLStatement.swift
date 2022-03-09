@@ -238,13 +238,13 @@ public class DLStatement {
         return Int8(columnInt32(position: position))
     }
     public func columnUInt8(position: Int) -> UInt8 {
-        return UInt8(bitPattern: columnInt32(position: position))
+        return UInt8(bitPattern: columnInt8(position: position))
     }
     public func columnInt16(position: Int) -> Int16 {
         return Int16(columnInt32(position: position))
     }
     public func columnUInt16(position: Int) -> UInt16 {
-        return UInt16(bitPattern: columnInt32(position: position))
+        return UInt16(bitPattern: columnInt16(position: position))
     }
     public func columnBool(position: Int) -> Bool {
         return 0 == columnInt32(position: position) ? false : true
