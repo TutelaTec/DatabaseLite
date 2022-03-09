@@ -17,8 +17,7 @@ let package = Package(
     targets: [
         .target(
             name: "DatabaseLite",
-            dependencies: [],
-            exclude: ["DatabaseLite/README.md"]
+            dependencies: []
         ),
         .testTarget(
             name: "DatabaseLiteTests",
