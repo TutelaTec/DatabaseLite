@@ -9,6 +9,7 @@ import Foundation
 import SQLite3
 
 public class DLTableDecoder {
+    public init() {}
     public func decode<T:Decodable>(_ type: T.Type, from statement:DLStatement) throws -> T {
         let decoder = try DLTableDecoding(statement)
         return try type.init(from: decoder)
