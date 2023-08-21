@@ -50,8 +50,12 @@ struct TestTable: DLTablable {
         return type(of: self).tableName + " : " + (str ?? "-- error --")
     }
 
-    static func make() -> TestTable {
-        TestTable(rowId: .toBeDefined, timestamp: 2000.randomRoll, download: 300.0.randomRoll, upload: 200.0.randomRoll, status: String.randomRoll(["Success", "Failure"]))
+    static func make(_ o: String? = nil ) -> TestTable {
+        TestTable(rowId: .toBeDefined,
+                  timestamp: 2000.randomRoll,
+                  download: 300.0.randomRoll,
+                  upload: 200.0.randomRoll,
+                  status: String.randomRoll(["Success", "Failure"]))
     }
 }
 
